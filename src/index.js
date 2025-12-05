@@ -1,4 +1,4 @@
-import Plugin from './plugin';
-import './styles/index.pcss';
+import Plugin from "./plugin";
+import "./styles/index.pcss";
 
 export default Plugin;

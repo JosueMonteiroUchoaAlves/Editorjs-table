@@ -1,4 +1,3 @@
-
 /**
  * Limits the frequency of calling a function
  *
@@ -6,17 +5,17 @@
  * @param {function} fn - function to be throttled
  */
 export default function throttled(delay, fn) {
-  let lastCall = 0;
+	let lastCall = 0;
 
-  return function (...args) {
-    const now = new Date().getTime();
+	return function (...args) {
+		const now = new Date().getTime();
 
-    if (now - lastCall < delay) {
-      return;
-    }
+		if (now - lastCall < delay) {
+			return;
+		}
 
-    lastCall = now;
+		lastCall = now;
 
-    return fn(...args);
-  };
+		return fn(...args);
+	};
 }
