@@ -71,10 +71,28 @@ export default class TableBlock {
 		this.data = {
 			withHeadings: this.getConfig("withHeadings", false, data),
 			stretched: this.getConfig("stretched", false, data),
-			content: data && data.content ? data.content : [],
+			content: data && data.content ? this._normalizeData(data.content) : [],
 		};
 		this.table = null;
 		this.block = block;
+	}
+
+	/**
+	 * An auxiliary method to ensure that everything becomes an object.
+	 * @param {string[][]|object[][]} content
+	 */
+	_normalizeData(content) {
+		if (!Array.isArray(content)) return [];
+		return content.map((row) => {
+			return row.map((cell) => {
+				// If it's a string (legacy format), convert it to an object with readOnly: false.
+				if (typeof cell === "string") {
+					return {content: cell, readOnly: false};
+				}
+				// If it's already an object (new format), it returns as is.
+				return cell;
+			});
+		});
 	}
 
 	/**

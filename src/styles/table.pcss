@@ -206,8 +206,22 @@
   &--selected {
     background: var(--color-background);
   }
+
+  &--locked {
+    background-color: #f4f5f7; /* A light gray background to indicate 'disable' state */
+    color: var(--color-text-secondary); /* Lighter text color */
+    cursor: not-allowed;
+    user-select: none; /* Prevents text selection inside the locked cell */
+  }
 }
 
 .tc-wrap--readonly .tc-row::after {
   display: none;
+}
+
+.tc-cell--locked {
+  background-color: #f4f5f7;
+  color: #9ea1a8; /* Hardcoded lighter text color */
+  cursor: not-allowed;
+  user-select: none; /* Prevent text selection */
 }
