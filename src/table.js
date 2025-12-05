@@ -187,6 +187,33 @@ export default class Table {
 		this.table.addEventListener("focusin", (event) =>
 			this.focusInTableListener(event)
 		);
+		this.table.addEventListener("contextmenu", (event) => {
+			const cell = event.target.closest(`.${CSS.cell}`);
+
+			// If no cell was clicked, ignore it and let the browser menu open
+			if (!cell) return;
+
+			// Prevent the browser's native menu
+			event.preventDefault();
+
+			// Check the current state
+			const isCurrentlyLocked =
+				cell.getAttribute("contenteditable") === "false";
+
+			if (isCurrentlyLocked) {
+				// UNLOCK
+				cell.setAttribute("contenteditable", "true");
+				cell.classList.remove("tc-cell--locked"); // Remove visual gray
+				delete cell.dataset.locked;
+				console.log("🔓 Cell unlocked");
+			} else {
+				// LOCK
+				cell.setAttribute("contenteditable", "false");
+				cell.classList.add("tc-cell--locked"); // Add visual gray
+				cell.dataset.locked = "true";
+				console.log("🔒 Cell locked");
+			}
+		});
 	}
 
 	/**
@@ -365,10 +392,41 @@ export default class Table {
 	 * @param {number} column - cell column coordinate
 	 * @param {string} content - cell HTML content
 	 */
+	/**
+	 * Set the cell's content by row and column numbers.
+	 * Now supports objects with permission metadata!
+	 *
+	 * @param {number} row - cell row coordinate
+	 * @param {number} column - cell column coordinate
+	 * @param {string|object} content - cell HTML content OR cell data object
+	 */
 	setCellContent(row, column, content) {
 		const cell = this.getCell(row, column);
 
-		cell.innerHTML = content;
+		// Defensive normalization: ensures we have an object
+		const cellData =
+			typeof content === "object"
+				? content
+				: {content: content, readOnly: false};
+
+		// Define the internal HTML
+		cell.innerHTML = cellData.content || "";
+
+		// LOCKING LOGIC
+		// If the entire table is readOnly (this.readOnly) OR the specific cell is readOnly
+		const isLocked = this.readOnly || cellData.readOnly;
+
+		if (isLocked) {
+			// LOCK
+			cell.contentEditable = "false";
+			cell.classList.add("tc-cell--locked");
+			cell.dataset.locked = "true";
+		} else {
+			// UNLOCK
+			cell.contentEditable = "true";
+			cell.classList.remove("tc-cell--locked");
+			delete cell.dataset.locked;
+		}
 	}
 
 	/**
@@ -1036,6 +1094,11 @@ export default class Table {
 	 *
 	 * @returns {string[][]}
 	 */
+	/**
+	 * Collects data from cells into a two-dimensional array of cell objects.
+	 *
+	 * @returns {object[][]}
+	 */
 	getData() {
 		const data = [];
 
@@ -1048,7 +1111,16 @@ export default class Table {
 				continue;
 			}
 
-			data.push(cells.map((cell) => cell.innerHTML));
+			// Map cells to the new object format, checking the contenteditable attribute for the readOnly state
+			const rowContent = cells.map((cell) => {
+				return {
+					content: cell.innerHTML,
+					// The cell is readOnly if the contenteditable attribute is 'false'
+					readOnly: cell.getAttribute("contenteditable") === "false",
+				};
+			});
+
+			data.push(rowContent);
 		}
 
 		return data;
